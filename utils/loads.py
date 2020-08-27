@@ -5,11 +5,10 @@ xrld模块的简单遍历数据
 
 def filter: 过滤条件。索引号
 """
-import xlrd,sys
+import xlrd, sys
 
 
-
-class simpleXlrd:
+class loadExcel:
     # 迭代量
     iter = 0
 
@@ -57,7 +56,6 @@ class simpleXlrd:
         """
         数据过滤. 内部函数只能返回bool类型
         :param field:
-        :param index:
         :param function:
         :return:
         """
@@ -104,13 +102,25 @@ class simpleXlrd:
             )
         return self
 
+    def getColIndex(self):
+        """
+        返回bar
+        :return:
+        """
+        return [key for key in self.filterColIndex(list(self.colIndex.keys()))]
+
+    def filterColIndex(self, line):
+        if len(self.indexes) > 0:
+            line = list(filter(lambda item: line.index(item) in self.indexes, line))
+        return line
+
     def __next__(self):
         """
         迭代器
         :return:
         """
         line = self.data.row(self.iter)
-        self.iter += 1
+        self.iter += 1  # 全局变量
         if self.iter >= self.data.nrows:
             raise StopIteration
 
@@ -119,7 +129,7 @@ class simpleXlrd:
             funcs = self.filter_dict.get(index)
             value = line[index]
             for func in funcs:
-                if not func(line):
+                if not func(value):
                     return self.__next__()
         # 字段修饰处理
         for index in self.fills_dict:
@@ -128,8 +138,7 @@ class simpleXlrd:
                 line[index] = func(line[index])
 
         # 如果字段筛选
-        if len(self.indexes) > 0:
-            line = list(filter(lambda item: line.index(item) in self.indexes, line))
+        line = self.filterColIndex(line)
 
         return line
 
